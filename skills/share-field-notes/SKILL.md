@@ -69,7 +69,8 @@ um kb pr knowledge/games/<game>/<note>.md --yes    # branch, commit, push (fork 
 - **Never include:**
   - game files or extracted assets;
   - decompiled code dumps;
-  - anything that helps cheat in online games or bypass anti-cheat, DRM or ownership checks.
+  - anything that cheats other players or bypasses anti-cheat, DRM or ownership checks (every game is in
+    scope, multiplayer and servers you host included).
 
 ## When your notes disagree with an existing one
 Don't delete theirs. Add a dated line to the relevant Gotcha ("2026-10-02, build 1.2.3: this changed to...")

@@ -27,16 +27,20 @@ You just modded (or tried to mod) a game, and you learned things. Share them:
    branches, commits the note (+ `media/` + index), forks if needed, pushes, and opens the PR with `gh`.
    Without `gh`, push a branch and open the PR on github.com.
 
+## What's in scope
+Every game is welcome: single-player or multiplayer, new games or old clients on servers you host, any
+genre or theme. Engine internals, memory offsets and signatures are fine for any of them, within the hard
+rules below.
+
 ## Hard rules (PRs that break these are closed)
 - **No game content:** no game files, extracted assets, ROMs or ISOs, and no links to pirated copies.
 - **No decompiled code dumps.** Describe the logic in your own words and name symbols; keep snippets of
   *your own* code short (`um kb check` fails blocks over 150 lines and warns over 60).
-- **Nothing that helps cheat in online games:**
-  - no memory offsets or signatures for multiplayer titles;
+- **No cheating other players, and no bypasses:**
+  - nothing that gives an edge over other players on servers you don't run (aimbots, ESP, speed hacks,
+    bots);
   - no anti-cheat, DRM or ownership-check bypasses;
-  - no instructions for injecting into protected online clients.
-
-  Single-player and offline only.
+  - no instructions for injecting into online clients protected by anti-cheat.
 - **No secrets:** API keys, tokens, `.env` files. `um kb check` and `um publish check` catch the common
   ones.
 - **Honesty:**
