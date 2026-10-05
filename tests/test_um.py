@@ -131,6 +131,19 @@ def test_known_game_longest_key_wins(tmp_path):
     assert r["routes"][0]["route"] == scan.KNOWN["grand theft auto v enhanced"][0]
 
 
+def test_auto_hdr_detection(monkeypatch):
+    # Auto HDR on an HDR display washes out captures of SDR games; um warns from the registry setting
+    from um import win
+    prefs = {"DirectXUserGlobalSettings": "AutoHDREnable=0;SwapEffectUpgradeEnable=1;",
+             r"E:\Games\Foo\Foo.exe": "AppStatus=1;AutoHDREnable=2097;",
+             r"E:\Games\Bar\Bar.exe": "AppStatus=1;AutoHDREnable=2096;"}
+    monkeypatch.setattr(win, "_gpu_prefs", lambda: prefs)
+    assert win.auto_hdr_on("Foo.exe") and win.auto_hdr_on("foo")
+    assert not win.auto_hdr_on("Bar.exe") and not win.auto_hdr_on("Other.exe") and not win.auto_hdr_on()
+    prefs["DirectXUserGlobalSettings"] = "AutoHDREnable=1;"
+    assert win.auto_hdr_on("Other.exe") and not win.auto_hdr_on("Bar.exe")
+
+
 # --------------------------------------------------------------------------- sprite
 
 def sprite_on_white(w=64, h=48):
