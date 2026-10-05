@@ -28,7 +28,7 @@ repo, they almost always want to **mod a game**, or to learn how a game was modd
 - **fal MCP server:** `https://mcp.fal.ai/mcp` with header `Authorization: Bearer $FAL_KEY`.
   - It's pre-configured per agent: `.mcp.json` (Claude Code), `.codex/config.toml` (Codex),
     `.cursor/mcp.json` (Cursor), `.vscode/mcp.json` (VS Code / Copilot), `gemini-extension.json`
-    (Gemini CLI).
+    (Gemini CLI), `opencode.json` (OpenCode).
   - No MCP? `um fal` does the same over REST.
 - **Skills** (`skills/*/SKILL.md`, Agent Skills format) are also linked where each agent looks for them:
   `.agents/skills` (Codex and others), `.claude/skills`, `.gemini/skills`, `.github/skills`.
