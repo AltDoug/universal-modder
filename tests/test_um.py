@@ -203,6 +203,32 @@ def test_kv_and_urls(tmp_path):
     assert [u for _, u, _ in fal._urls_in(res)] == ["https://v3.fal.media/a.png", "https://v3.fal.media/b.png", "https://v3.fal.media/m.png"]
 
 
+def test_failed_download_keeps_the_request_id(tmp_path, monkeypatch, capsys):
+    # a finished (paid) job whose output URL 404s must not vanish: say which request to fetch again
+    class Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b"ok"
+
+    def urlopen(req, timeout=None):
+        if req.full_url.endswith("big.mov"):
+            raise fal.urllib.error.HTTPError(req.full_url, 404, "Not Found", {}, None)
+        return Resp()
+    monkeypatch.setattr(fal.urllib.request, "urlopen", urlopen)
+    res = {"video": {"url": "https://v3b.fal.media/files/x/big.mov"}, "thumb": {"url": "https://v3b.fal.media/files/x/t.png"},
+           "_request_id": "req-123", "_endpoint": "fal-ai/some-model"}
+    with pytest.raises(SystemExit):
+        fal.download_outputs(res, tmp_path, "clip")
+    err = capsys.readouterr().err
+    assert "big.mov" in err and "um fal result fal-ai/some-model req-123" in err
+    assert (tmp_path / "clip_thumb.png").read_bytes() == b"ok"   # the other outputs still saved
+
+
 # --------------------------------------------------------------------------- publish
 
 def test_publish_check(tmp_path, capsys):
