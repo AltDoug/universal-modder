@@ -328,3 +328,105 @@ def test_backup_diff_and_restore_round_trip(tmp_path, monkeypatch):
     assert (src / "sub" / "cfg.ini").read_text() == "a=1"
     assert not (src / "extra.log").exists()
     assert backup.snapshots("t-pre-restore")  # the state before the restore was kept
+
+
+# --------------------------------------------------------------------------- comfy
+
+from um import comfy  # noqa: E402
+
+
+@pytest.fixture
+def fake_comfy():
+    """A stand-in for ComfyUI's HTTP API: /system_stats, /models, /object_info, /prompt, /history, /view."""
+    import io
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import parse_qs, urlparse
+
+    state = {"prompts": [], "polls": 0, "models_route": True}
+    png = io.BytesIO()
+    im = Image.new("RGBA", (16, 16), (255, 255, 255, 255))      # a red square on a white background
+    im.paste((200, 30, 30, 255), (4, 4, 12, 12))
+    im.save(png, "PNG")
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def _send(self, body: bytes, code=200, ctype="application/json"):
+            self.send_response(code)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):
+            u = urlparse(self.path)
+            if u.path == "/system_stats":
+                self._send(json.dumps({"system": {"comfyui_version": "0.9.0", "pytorch_version": "2.9.0"},
+                                       "devices": [{"name": "fake", "type": "cpu"}]}).encode())
+            elif u.path == "/models/checkpoints" and state["models_route"]:
+                self._send(json.dumps(["sd15.safetensors", "sdxl_base.safetensors"]).encode())
+            elif u.path == "/object_info/CheckpointLoaderSimple":
+                spec = ["COMBO", {"options": ["v3.safetensors"]}]
+                self._send(json.dumps({"CheckpointLoaderSimple": {"input": {"required": {"ckpt_name": spec}}}}).encode())
+            elif u.path == "/history/p1":
+                state["polls"] += 1                                  # the first poll finds it still running
+                done = {"p1": {"status": {"status_str": "success", "completed": True},
+                               "outputs": {"9": {"images": [{"filename": "um_00001_.png", "subfolder": "", "type": "output"}]}}}}
+                self._send(json.dumps(done if state["polls"] > 1 else {}).encode())
+            elif u.path == "/view" and parse_qs(u.query).get("filename") == ["um_00001_.png"]:
+                self._send(png.getvalue(), ctype="image/png")
+            else:
+                self._send(b"404: Not Found", 404, "text/plain")
+
+        def do_POST(self):
+            wf = json.loads(self.rfile.read(int(self.headers["Content-Length"])))["prompt"]
+            state["prompts"].append(wf)
+            if wf.get("4", {}).get("inputs", {}).get("ckpt_name") == "missing.safetensors":
+                err = {"error": {"message": "Prompt outputs failed validation", "details": ""},
+                       "node_errors": {"4": {"class_type": "CheckpointLoaderSimple", "errors": [
+                           {"message": "Value not in list", "details": "ckpt_name: 'missing.safetensors' not in [...]"}]}}}
+                self._send(json.dumps(err).encode(), 400)
+            else:
+                self._send(json.dumps({"prompt_id": "p1", "number": 0, "node_errors": {}}).encode())
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    state["url"] = f"http://127.0.0.1:{srv.server_address[1]}"
+    yield state
+    srv.shutdown()
+
+
+def test_comfy_image_sprite(fake_comfy, tmp_path, monkeypatch):
+    from um import cli
+    monkeypatch.setattr(comfy.time, "sleep", lambda s: None)
+    out = tmp_path / "gen"
+    cli.main(["comfy", "image", "a red potion", "--url", fake_comfy["url"], "--out", str(out), "--seed", "7", "--sprite"])
+    wf = fake_comfy["prompts"][-1]
+    assert wf["4"]["inputs"]["ckpt_name"] == "sd15.safetensors"               # the first checkpoint listed
+    assert (wf["5"]["inputs"]["width"], wf["3"]["inputs"]["seed"]) == (512, 7)  # SD 1.5 size, the given seed
+    assert "plain flat white background" in wf["6"]["inputs"]["text"]
+    assert Image.open(out / "a_red_potion.png").size == (16, 16)
+    cut = Image.open(out / "a_red_potion_cut.png")                           # cut out and trimmed locally
+    assert cut.size == (8, 8) and cut.getpixel((0, 0)) == (200, 30, 30, 255)
+    rec = json.loads((out / "comfy_manifest.jsonl").read_text().splitlines()[-1])
+    assert rec["prompt_id"] == "p1" and rec["seed"] == 7 and rec["workflow"]["9"]["class_type"] == "SaveImage"
+
+
+def test_comfy_run_set_and_errors(fake_comfy, tmp_path, monkeypatch):
+    monkeypatch.setattr(comfy.time, "sleep", lambda s: None)
+    wf = comfy.txt2img("x", "sd15.safetensors")
+    wf["6"]["_meta"] = {"title": "Positive"}
+    (tmp_path / "wf.json").write_text(json.dumps(wf))
+    wf = comfy.apply_set(comfy.load_workflow(tmp_path / "wf.json"), ["Positive.text=a v1.5 sword=sharp", "3.seed:=42"])
+    assert (wf["6"]["inputs"]["text"], wf["3"]["inputs"]["seed"]) == ("a v1.5 sword=sharp", 42)
+    assert [Path(f).name for f in comfy.generate(fake_comfy["url"], wf, tmp_path / "o", "sword")] == ["sword.png"]
+    (tmp_path / "ui.json").write_text(json.dumps({"nodes": [], "links": []}))
+    with pytest.raises(SystemExit):
+        comfy.load_workflow(tmp_path / "ui.json")                            # UI format: needs Export (API)
+    with pytest.raises(SystemExit):
+        comfy.queue(fake_comfy["url"], comfy.txt2img("x", "missing.safetensors"))   # validation error reported
+    fake_comfy["models_route"] = False
+    assert comfy.checkpoints(fake_comfy["url"]) == ["v3.safetensors"]        # older servers: /object_info
+    assert comfy.status(fake_comfy["url"])["version"] == "0.9.0"

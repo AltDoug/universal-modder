@@ -44,7 +44,7 @@ Inside a clone, each agent finds the skills where it looks for them: `.agents/sk
 uv tool install git+https://github.com/rehan-remade/universal-modder     # or: pipx install git+...
 ```
 **For assets,** get a [fal API key](https://fal.ai/dashboard/keys). It powers both the fal MCP server and
-`um fal`:
+`um fal` (for images without a key, `um comfy` uses a local ComfyUI server):
 ```bash
 export FAL_KEY=...
 ```
@@ -117,6 +117,7 @@ players, and an honest status and verification.
 |---|---|
 | `um scan` | Find Steam/Epic/Xbox installs; fingerprint engine and version, .NET vs native, anti-cheat, installed loaders, save folders, ranked routes |
 | `um fal` | `sprite`, `image`, `edit`, `rmbg`, `pixelate`, `upscale`, `texture`, `pbr`, `model3d`, `rig`, `sfx`, `music`, `voice`, `video`, `run`, `search`, `schema`, `price`. Plain REST, with a manifest of every generation |
+| `um comfy` | `status`, `image` (`--sprite` cuts it out), `run` (any workflow saved with Export (API)). Images from a local ComfyUI server, no API key |
 | `um sprite` | `cutout`, `fit`, `pixelate`, `palette`, `sheet`, `slice`, `frames`, `team-mask`, `seamless`, `preview` |
 | `um render3d` | GLB → sprite frames from the game's camera (`aoe2`, `iso8`, `trueiso`, `topdown`, `side`, `turntable`) with Blender |
 | `um win` | `shot`, `record` (gfxcapture + process-loopback audio), `drive` (input that only reaches the game), `ps`, `kill`, `launch`, `reg` |
