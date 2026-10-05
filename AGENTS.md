@@ -30,8 +30,9 @@ repo, they almost always want to **mod a game**, or to learn how a game was modd
     `.cursor/mcp.json` (Cursor), `.vscode/mcp.json` (VS Code / Copilot), `gemini-extension.json`
     (Gemini CLI).
   - No MCP? `um fal` does the same over REST.
-- **Skills** (`skills/*/SKILL.md`, Agent Skills format) are also linked where each agent looks for them:
-  `.agents/skills` (Codex and others), `.claude/skills`, `.gemini/skills`, `.github/skills`.
+- **Skills** (`skills/*/SKILL.md`, Agent Skills format) are copied where agents look for them in a clone:
+  `.agents/skills` (Codex, Gemini CLI, Copilot, Cursor, OpenCode) and `.claude/skills` (Claude Code). Edit
+  `skills/`, then copy it over; a test fails while the copies differ.
 - **Engine playbooks:** `skills/mod-any-game/references/engines/`.
 - **Worked examples:** `examples/terraria-tmodloader`, `examples/aoe2-de-civ`,
   `examples/minecraft-gta5-passthrough`.

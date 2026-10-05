@@ -328,3 +328,16 @@ def test_backup_diff_and_restore_round_trip(tmp_path, monkeypatch):
     assert (src / "sub" / "cfg.ini").read_text() == "a=1"
     assert not (src / "extra.log").exists()
     assert backup.snapshots("t-pre-restore")  # the state before the restore was kept
+
+
+def test_skill_copies_match():
+    # .agents/skills and .claude/skills are real copies of skills/ (Windows clones turn symlinks into text files)
+    root = Path(__file__).resolve().parents[1]
+    def tree(d):
+        return {p.relative_to(d).as_posix(): p.read_bytes() for p in sorted(d.rglob("*")) if p.is_file()}
+    src = tree(root / "skills")
+    for copy in (".agents/skills", ".claude/skills"):
+        assert not (root / copy).is_symlink(), f"{copy} must be a folder, not a symlink"
+        assert tree(root / copy) == src, (f"{copy} differs from skills/: rm -rf .agents/skills .claude/skills && "
+                                          "cp -r skills .agents/skills && cp -r skills .claude/skills")
+    assert not any((root / d).exists() for d in (".gemini/skills", ".github/skills")), "agents read .agents/skills"

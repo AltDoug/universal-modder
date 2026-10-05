@@ -56,6 +56,9 @@ rules below.
   - `uv run --with pytest pytest -q tests` must pass.
 - **Skills (`skills/`):** the Agent Skills format (`SKILL.md` with `name` + `description`). Keep them
   agent-neutral: say "the agent", not a specific product. Put deep material in `references/`.
+  - Edit `skills/` only. `.agents/skills` and `.claude/skills` are copies (no symlinks, so Windows clones
+    work). Refresh them with `rm -rf .agents/skills .claude/skills && cp -r skills .agents/skills && cp -r
+    skills .claude/skills`; a test fails while they differ.
 - **Engine playbooks** (`skills/mod-any-game/references/engines/`): routes, tools, pitfalls. Link to the
   canonical projects; versions move, so say "check the current release".
 - **Examples (`examples/`):** your own code and assets only. Use `fetch` scripts for third-party SDKs, and
