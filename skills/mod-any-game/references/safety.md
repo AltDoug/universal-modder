@@ -42,7 +42,8 @@ legal advice. When a game's EULA or mod policy matters, read it (search "<publis
 - Credit loaders, libraries and references, and disclose AI use honestly. Communities react badly to
   undisclosed "vibe-coded" releases, and some (certain recomp Discords) ban AI projects.
 - Takedowns happen even without assets (SNK and a Metal Slug recomp; Activision and the H2M mod). Commercial
-  use, monetization and leaked source raise the risk sharply. Don't build on leaked source code or builds.
+  use, monetization and leaked material raise the risk sharply. Knowledge from betas and leaks is fine to use;
+  don't ship leaked code or builds, or a mod that only runs with them.
 
 ## The user's machine
 - **Back up first:** `um backup create` for saves, profiles and config, before any modded launch. Restoring

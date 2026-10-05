@@ -36,6 +36,9 @@ rules below.
 - **No game content:** no game files, extracted assets, ROMs or ISOs, and no links to pirated copies.
 - **No decompiled code dumps.** Describe the logic in your own words and name symbols; keep snippets of
   *your own* code short (`um kb check` fails blocks over 150 lines and warns over 60).
+- **Leaks:** knowledge from beta builds and leaked SDKs or source is fine to write up in your own words, and
+  so is saying where it came from. The leaked material itself stays out: no pasted code, attached files,
+  download links or license keys, and no instructions to fetch them.
 - **No cheating other players, and no bypasses:**
   - nothing that gives an edge over other players on servers you don't run (aimbots, ESP, speed hacks,
     bots);
