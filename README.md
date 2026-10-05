@@ -51,6 +51,14 @@ export FAL_KEY=...
 You also need Python 3.10+ and ffmpeg. `uv` is recommended. Blender is needed for 3D → sprite renders.
 Windows games are driven natively or from WSL.
 
+**Windows: `gemini extensions install` fails with "Configuration file not found".** Git for Windows can stop
+the checkout at this repo's symlinks. Clone with symlinks off, then install from the folder. Answer `y` when
+Gemini asks to trust it; a "Failed to discover skills" line about `.gemini/skills` is harmless.
+```powershell
+git -c core.symlinks=false clone https://github.com/rehan-remade/universal-modder
+gemini extensions install ./universal-modder
+```
+
 ## Try it
 > Mod Terraria: add a homing missile launcher and a tactical nuke that craters the world. Make the sprites with fal.
 
