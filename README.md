@@ -31,20 +31,21 @@ Pick your agent. Each gets the same skills (Agent Skills format), the fal MCP se
 | **Gemini CLI** | `gemini extensions install https://github.com/rehan-remade/universal-modder` |
 | **VS Code / Copilot** | Enable `chat.plugins.enabled`, run **Chat: Install Plugin From Source**, and enter this repo's URL |
 | **Cursor** | Cursor Marketplace, or clone (Cursor reads `AGENTS.md` and `.cursor/mcp.json`) |
+| **OpenCode** | Clone and run `opencode` inside it (`opencode.json` adds the skills and the fal MCP server) |
 | **Skills only** (any agent) | `npx skills add https://github.com/rehan-remade/universal-modder` |
 | **Anything else** | `git clone https://github.com/rehan-remade/universal-modder` and start your agent inside it |
 
 Inside a clone, each agent finds the skills where it looks for them: `.agents/skills` (Codex, Gemini CLI,
 Copilot, Cursor, OpenCode) and `.claude/skills` (Claude Code) are copies of `skills/`. Instructions are in
 `AGENTS.md`, which `CLAUDE.md` and `GEMINI.md` point to. MCP config is in `.mcp.json`, `.codex/config.toml`,
-`.cursor/mcp.json` and `.vscode/mcp.json`.
+`.cursor/mcp.json`, `.vscode/mcp.json` and `opencode.json` (which also points OpenCode at `skills/`).
 
 **The `um` CLI.** Plugin installs and clones put it on PATH. Anywhere else:
 ```bash
 uv tool install git+https://github.com/rehan-remade/universal-modder     # or: pipx install git+...
 ```
 **For assets,** get a [fal API key](https://fal.ai/dashboard/keys). It powers both the fal MCP server and
-`um fal`:
+`um fal` (for images without a key, `um comfy` uses a local ComfyUI server):
 ```bash
 export FAL_KEY=...
 ```
@@ -117,6 +118,7 @@ players, and an honest status and verification.
 |---|---|
 | `um scan` | Find Steam/Epic/Xbox installs; fingerprint engine and version, .NET vs native, anti-cheat, installed loaders, save folders, ranked routes |
 | `um fal` | `sprite`, `image`, `edit`, `rmbg`, `pixelate`, `upscale`, `texture`, `pbr`, `model3d`, `rig`, `sfx`, `music`, `voice`, `video`, `run`, `search`, `schema`, `price`. Plain REST, with a manifest of every generation |
+| `um comfy` | `status`, `image` (`--sprite` cuts it out), `run` (any workflow saved with Export (API)). Images from a local ComfyUI server, no API key |
 | `um sprite` | `cutout`, `fit`, `pixelate`, `palette`, `sheet`, `slice`, `frames`, `team-mask`, `seamless`, `preview` |
 | `um render3d` | GLB → sprite frames from the game's camera (`aoe2`, `iso8`, `trueiso`, `topdown`, `side`, `turntable`) with Blender |
 | `um win` | `shot`, `record` (gfxcapture + process-loopback audio), `drive` (input that only reaches the game), `ps`, `kill`, `launch`, `reg` |

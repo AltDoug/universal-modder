@@ -68,6 +68,19 @@ Use the community tool first:
 - FromSoft: WitchyBND, Smithbox
 - Godot: GDRE Tools
 
+Before reversing a format yourself, search the community archives. Most game formats from the 2000s and
+2010s were worked out there:
+- **XeNTaX** (closed in 2023): the [forum](https://archive.org/details/forum.xentax.com_2023-08-15),
+  [wiki](https://archive.org/details/wiki-wikixentaxcom_202305) and
+  [attachments](https://archive.org/details/Xentax-forum-attachments-archive) are on archive.org, with a
+  [public backup on GitHub](https://github.com/XeNTaXBackup/XeNTaXBackup.github.io);
+- **[ZenHAX](https://zenhax.com/index.php.html)**: game file research and QuickBMS scripts (posts up to
+  early 2023);
+- **[The definitive guide to exploring file formats](https://archive.org/details/definitive-guide-to-exploring-file-formats)**
+  (Mr. Mouse, XeNTaX): the classic tutorial on reading an unknown format.
+
+Use them for format knowledge and tools. Don't download game files or leaked source from them.
+
 For an **undocumented format**:
 1. Collect several stock files. Compare sizes, and hex-dump the headers (`xxd | head`). Look for magic
    numbers, counts, offsets and tables of fixed-size records.
