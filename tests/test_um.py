@@ -120,6 +120,14 @@ def test_steam_games_utf8(tmp_path, monkeypatch, library_name, install_name, gam
         "path": str(game_path), "workshop": None,
     }]
 
+
+def test_steam_root_from_registry(tmp_path, monkeypatch):
+    # Steam installed outside Program Files (e.g. C:\Steam): its libraryfolders.vdf, and every library in it, was never read
+    root = tmp_path / "Steam"
+    (root / "steamapps").mkdir(parents=True)
+    monkeypatch.setattr(scan, "steam_registry_root", lambda: root)
+    assert root.resolve() in scan.steam_roots()
+
 def test_known_game_longest_key_wins(tmp_path):
     # "grand theft auto v" is a substring of "grand theft auto v enhanced";
     # the more specific entry must win, not whichever lands first in the dict
@@ -142,6 +150,16 @@ def test_auto_hdr_detection(monkeypatch):
     assert not win.auto_hdr_on("Bar.exe") and not win.auto_hdr_on("Other.exe") and not win.auto_hdr_on()
     prefs["DirectXUserGlobalSettings"] = "AutoHDREnable=1;"
     assert win.auto_hdr_on("Other.exe") and not win.auto_hdr_on("Bar.exe")
+
+
+def test_slay_the_spire_2_is_not_sts1(tmp_path):
+    # StS2 is Godot + C#; the StS1 entry (ModTheSpire, Java) must not match it
+    d = tmp_path / "Slay the Spire 2"
+    d.mkdir()
+    for i in range(6):
+        (d / f"f{i}.txt").write_text("x")
+    route = scan.scan(str(d))["routes"][0]["route"]
+    assert route == scan.KNOWN["slay the spire 2"][0] and "ModTheSpire" not in route
 
 
 # --------------------------------------------------------------------------- sprite
@@ -339,6 +357,22 @@ def test_pr_head_same_repo():
     assert kb.pr_head("kb/a-b", None) == "kb/a-b"
 
 
+# --------------------------------------------------------------------------- powershell
+
+def test_ps_exe_falls_back_to_full_path(tmp_path, monkeypatch):
+    # an agent's PATH often lacks System32\WindowsPowerShell\v1.0; bare "powershell" then raises WinError 2
+    from um import common
+    exe = tmp_path / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+    exe.parent.mkdir(parents=True)
+    exe.write_bytes(b"MZ")
+    monkeypatch.setattr(common, "is_wsl", lambda: False)
+    monkeypatch.setattr(common.shutil, "which", lambda name: None)
+    monkeypatch.setenv("SystemRoot", str(tmp_path))
+    assert common.ps_exe() == str(exe)
+    monkeypatch.setattr(common.shutil, "which", lambda name: "/on/path/" + name)
+    assert common.ps_exe() == "/on/path/powershell"
+
+
 # --------------------------------------------------------------------------- backup
 
 def test_backup_handles_pre_1980_timestamps(tmp_path, monkeypatch):
@@ -486,3 +520,21 @@ def test_skill_copies_match():
         assert tree(root / copy) == src, (f"{copy} differs from skills/: rm -rf .agents/skills .claude/skills && "
                                           "cp -r skills .agents/skills && cp -r skills .claude/skills")
     assert not any((root / d).exists() for d in (".gemini/skills", ".github/skills")), "agents read .agents/skills"
+
+
+# --------------------------------------------------------------------------- hooks
+
+@pytest.mark.skipif(not shutil.which("cygpath"), reason="Git Bash / MSYS only")
+def test_path_hook_writes_a_posix_root(tmp_path):
+    # Claude Code passes ${CLAUDE_PLUGIN_ROOT} as C:/...; written as is, bash splits PATH at the drive colon
+    import os
+    root = tmp_path / "um root"
+    (root / "bin").mkdir(parents=True)
+    (root / "bin" / "um").write_text("#!/bin/sh\n")
+    env_file = tmp_path / "env.sh"
+    bash = str(Path(shutil.which("cygpath")).with_name("bash.exe"))
+    hook = Path(__file__).resolve().parents[1] / "hooks" / "add-to-path.sh"
+    subprocess.run([bash, str(hook), root.as_posix()], env={**os.environ, "CLAUDE_ENV_FILE": str(env_file)}, check=True)
+    value = env_file.read_text().split('"')[1]
+    prefix = value[:value.index("/bin:$PATH")]
+    assert prefix.startswith("/") and ":" not in prefix, value
